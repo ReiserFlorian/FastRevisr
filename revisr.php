@@ -228,7 +228,7 @@ final class Revisr {
 		define( 'REVISR_URL', plugin_dir_url( REVISR_FILE ) );
 
 		// The current version of the plugin.
-		define( 'REVISR_VERSION', '2.0.2' );
+		define( 'REVISR_VERSION', '3.0.0' );
 	}
 
 	/**
@@ -348,7 +348,7 @@ final class Revisr {
 		$deprecated = get_option( 'revisr_settings' ) ? get_option( 'revisr_settings' ) : array();
 		$general 	= get_option( 'revisr_general_settings' ) ? get_option( 'revisr_general_settings' ) : array();
 		$remote 	= get_option( 'revisr_remote_settings' ) ? get_option( 'revisr_remote_settings' ) : array();
-		$database 	= get_option( 'revisr_database_settings' ) ? get_option( 'revisr_database_settings' ) : array();
+		$database 	= get_option( 'revisr_db_dump_settings' ) ? get_option( 'revisr_db_dump_settings' ) : array();
 		$options 	= array_merge( $deprecated, $general, $remote, $database );
 		return $options;
 	}

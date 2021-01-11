@@ -48,11 +48,11 @@ class Revisr_Settings_Fields {
 	}
 
 	/**
-	 * Displays the description for the "Database Settings" tab.
+	 * Displays the description for the "Database Dump Settings" tab.
 	 * @access public
 	 */
-	public function revisr_database_settings_callback() {
-		_e( 'These settings configure how Revisr interacts with your database, if at all.', 'revisr' );
+	public function revisr_db_dump_settings_callback() {
+		_e( 'These settings configure how Revisr should dump your database', 'revisr' );
 	}
 	/**
 	 * Displays/updates the "Username" settings field.
@@ -390,181 +390,237 @@ class Revisr_Settings_Fields {
 	}
 
 	/**
-	 * Displays/updates the "DB Tracking" settings field.
+	 * Displays/updates the "mysql2dump" and "dump2mysql" settings field.
 	 * @access public
 	 */
-	public function tracked_tables_callback() {
-		if ( $this->is_updated( 'db_tracking' ) ) {
-			revisr()->git->set_config( 'revisr', 'db-tracking', revisr()->options['db_tracking'] );
-		}
-
-		if ( $db_tracking = revisr()->git->get_config( 'revisr', 'db-tracking' ) ) {
-			if ( $db_tracking == 'custom' && $this->is_updated( 'tracked_tables' ) ) {
-				revisr()->git->run( 'config', array( '--unset-all', 'revisr.tracked-tables' ) );
-				$tables = revisr()->options['tracked_tables'];
-				foreach ( $tables as $table ) {
-					revisr()->git->run( 'config', array( '--add', 'revisr.tracked-tables', $table ) );
-				}
-			} elseif ( $db_tracking != 'custom' ) {
-				revisr()->git->run( 'config', array( '--unset-all', 'revisr.tracked-tables' ) );
-			}
-		} else {
-			$db_tracking = '';
-		}
-
-		?>
-		<select id="db-tracking-select" name="revisr_database_settings[db_tracking]">
-			<option value="all_tables" <?php selected( $db_tracking, 'all_tables' ); ?>><?php _e( 'All Tables', 'revisr' ); ?></option>
-			<option value="custom" <?php selected( $db_tracking, 'custom' ); ?>><?php _e( 'Let me decide...', 'revisr' ); ?></option>
-			<option value="none" <?php selected( $db_tracking, 'none' ); ?>><?php _e( 'None', 'revisr' ); ?></option>
-		</select>
-
-		<?php
-		// Allows the user to select the tables they want to track.
-		$db 	= new Revisr_DB();
-		$tables = $db->get_tables();
-		$sizes  = $db->get_sizes();
-		echo '<div id="advanced-db-tracking" style="display:none;"><br><select name="revisr_database_settings[tracked_tables][]" multiple="multiple" style="width:35em;height:250px;">';
-
-		if ( is_array( $tables ) ) {
-
-			foreach ( $tables as $table ) {
-
-				$size = isset( $sizes[$table] ) ? $sizes[$table] : '';
-				$table_selected = '';
-
-				if ( in_array( $table, $db->get_tracked_tables() ) ) {
-					$table_selected = ' selected';
-				}
-
-				echo "<option value='$table'$table_selected>$table $size</option>";
-
-			}
-
-		}
-
-		echo '</select></div>';
-	}
-
-	/**
-	 * Displays/updates the "Development URL" settings field.
-	 * NOTE: DO NOT USE THE OPTION AS STORED IN THE DATABASE!
-	 * @access public
-	 */
-	public function development_url_callback() {
-		// Allow the user to unset the dev URL.
+	public function mysql_dump_helper_callback() {
 		if ( isset( $_GET['settings-updated'] ) ) {
-			if ( $this->is_updated( 'development_url' ) ) {
-				revisr()->git->set_config( 'revisr', 'dev-url', esc_url_raw( revisr()->options['development_url'] ) );
+			if ( $this->is_updated( 'mysql2dump' ) ) {
+				revisr()->git->set_config( 'revisr', 'mysql2dump', revisr()->options['mysql2dump'] );
 			} else {
-				revisr()->git->run( 'config', array( '--unset', 'revisr.dev-url' ) );
+				revisr()->git->set_config( 'revisr', 'mysql2dump', "../scripts/mysql2dump.py" );
+			}
+			if ( $this->is_updated( 'dump2mysql' ) ) {
+				revisr()->git->set_config( 'revisr', 'dump2mysql', revisr()->options['dump2mysql'] );
+			} else {
+				revisr()->git->set_config( 'revisr', 'dump2mysql', "../scripts/dump2mysql.py" );
 			}
 		}
 
 		// Grab the URL from the .git/config as it will be replaced in the database.
-		$get_url = revisr()->git->get_config( 'revisr', 'dev-url' );
-		if ( $get_url !== false ) {
-			$dev_url = $get_url;
+		$path = revisr()->git->get_config( 'revisr', 'mysql2dump' );
+		if ( $path !== false ) {
+			$mysql2dump_path = $path;
 		} else {
-			$dev_url = '';
+			$mysql2dump_path = "../scripts/mysql2dump.py";
 		}
 
-		printf(
-			'<input type="text" id="development_url" name="revisr_database_settings[development_url]" class="regular-text revisr-text" value="%s" />
-			<p class="description revisr-description">%s</p>',
-			$dev_url,
-			__( 'If you\'re importing the database from a seperate environment, enter the WordPress Site URL for that environment here to replace all occurrences of that URL with the current Site URL during import. This MUST match the WordPress Site URL of the database being imported.', 'revisr' )
-		);
-	}
-
-	/**
-	 * Displays/updates the "DB Driver" settings field.
-	 * @access public
-	 */
-	public function db_driver_callback() {
-		if ( $this->is_updated( 'db_driver' ) ) {
-			revisr()->git->set_config( 'revisr', 'db-driver', revisr()->options['db_driver'] );
-		}
-
-		$current = revisr()->git->get_config( 'revisr', 'db-driver' );
-
-		?>
-		<select id="db-driver-select" name="revisr_database_settings[db_driver]">
-			<option value="mysql" <?php selected( 'mysql', $current ); ?>><?php _e( 'MySQL', 'revisr' ); ?></option>
-			<option value="wpdb" <?php selected( 'wpdb', $current ); ?>><?php _e( 'WordPress', 'revisr' ); ?></option>
-		</select>
-		<p class="description"><?php _e( 'MySQL can be faster, but may not be available on some servers.', 'revisr' ); ?></p>
-
-		<?php
-
-	}
-
-	/**
-	 * Displays/updates the "Path to MySQL" settings field.
-	 * @access public
-	 */
-	public function mysql_path_callback() {
-		if ( isset( $_GET['settings-updated'] ) ) {
-			if ( $this->is_updated( 'mysql_path' ) ) {
-
-				// Properly escape trailing backslashes on Windows.
-				if ( substr( revisr()->options['mysql_path'], -1 ) === '\\' ) {
-					revisr()->options['mysql_path'] .= '\\';
-				}
-
-				revisr()->git->set_config( 'revisr', 'mysql-path', revisr()->options['mysql_path'] );
-
-			} else {
-				revisr()->git->run( 'config', array( '--unset', 'revisr.mysql-path' ) );
-			}
-		}
-
-		if ( $get_path = revisr()->git->get_config( 'revisr', 'mysql-path' ) ) {
-			$mysql_path = $get_path;
+		$path = revisr()->git->get_config( 'revisr', 'dump2mysql' );
+		if ( $path !== false ) {
+			$dump2mysql_path = $path;
 		} else {
-			$mysql_path = '';
+			$dump2mysql_path = "../scripts/dump2mysql.py";
 		}
 
 		printf(
-			'<input type="text" id="mysql_path" name="revisr_database_settings[mysql_path]" value="%s" class="regular-text revisr-text" placeholder="" />
+			'<input type="text" id="mysql2dump" name="revisr_db_dump_settings[mysql2dump]" class="regular-text revisr-text" value="%s" /><br><label for="mysql2dump">%s</label><br><br>
+			<input type="text" id="dump2mysql" name="revisr_db_dump_settings[dump2mysql]" class="regular-text revisr-text" value="%s" /><br><label for="dump2mysql">%s</label><br><br>
 			<p class="description revisr-description">%s</p>',
-			esc_attr( $mysql_path ),
-			__( 'Leave blank if the full path to MySQL has already been set on the server. Some possible settings include:
-			<br><br>For MAMP: /Applications/MAMP/Library/bin/<br>
-			For WAMP: C:\wamp\bin\mysql\mysql5.6.12\bin\ ', 'revisr' )
+			esc_attr($mysql2dump_path),
+			__( 'Path to the external script, which creates dump files from the mysql database', 'revisr' ),
+			esc_attr($dump2mysql_path),
+			__( 'Path to the external script, which loads the dump files into the mysql database', 'revisr' ),
+			__( 'Leave blank to reset to default. The path must be given relatively to the root folder of the webpage (normally the www folder).', 'revisr' )
 		);
 	}
 
 	/**
-	 * Displays/updates the "Reset DB" settings field.
+	 * Displays/updates the "dump path" settings field.
 	 * @access public
 	 */
-	public function reset_db_callback() {
-
+	public function mysql_dump_path_callback() {
 		if ( isset( $_GET['settings-updated'] ) ) {
-
-			if ( isset( revisr()->options['reset_db'] ) ) {
-				revisr()->git->set_config( 'revisr', 'import-checkouts', 'true' );
+			if ( $this->is_updated( 'mysq_dump_path' ) ) {
+				revisr()->git->set_config( 'revisr', 'mysq_dump_path', revisr()->options['mysq_dump_path'] );
 			} else {
-				revisr()->git->run( 'config', array( '--unset-all', 'revisr.import-checkouts' ) );
-			}
-
-			if ( isset( revisr()->options['import_db'] ) ) {
-				revisr()->git->set_config( 'revisr', 'import-pulls', 'true' );
-			} else {
-				revisr()->git->run( 'config',  array( '--unset-all', 'revisr.import-pulls' ) );
+				revisr()->git->set_config( 'revisr', 'mysq_dump_path', "../mysqldump/" );
 			}
 		}
 
+		// Grab the URL from the .git/config as it will be replaced in the database.
+		$path = revisr()->git->get_config( 'revisr', 'mysq_dump_path' );
+		if ( $path !== false ) {
+			$dump_path = $path;
+		} else {
+			$dump_path = '../mysqldump/';
+		}
+
 		printf(
-			'<input type="checkbox" id="reset_db" name="revisr_database_settings[reset_db]" %s /><label for="reset_db">%s</label><br><br>
-			<input type="checkbox" id="import_db" name="revisr_database_settings[import_db]" %s /><label for="import_db">%s</label><br><br>
+			'<input type="text" id="mysq_dump_path" name="revisr_db_dump_settings[mysq_dump_path]" class="regular-text revisr-text" value="%s" />
 			<p class="description revisr-description">%s</p>',
-			checked( revisr()->git->get_config( 'revisr', 'import-checkouts' ), 'true', false ),
-			__( 'Import database when changing branches?', 'revisr' ),
-			checked( revisr()->git->get_config( 'revisr', 'import-pulls' ), 'true', false ),
-			__( 'Import database when pulling commits?', 'revisr' ),
-			__( 'If checked, Revisr will automatically import the above tracked tables while pulling from or checking out a branch. The tracked tables will be backed up beforehand to provide a restore point immediately prior to the import. Use this feature with caution and only after verifying that you have a full backup of your website.', 'revisr' )
+			esc_attr($dump_path),
+			__( 'Path to store the mysql dump. Leave blank to reset to default. The path must be given relative to the root folder of the webpage (normally the www folder).', 'revisr' )
 		);
 	}
+
+	// /**
+	//  * Displays/updates the "DB Tracking" settings field.
+	//  * @access public
+	//  */
+	// public function tracked_tables_callback() {
+	// 	if ( $this->is_updated( 'db_tracking' ) ) {
+	// 		revisr()->git->set_config( 'revisr', 'db-tracking', revisr()->options['db_tracking'] );
+	// 	}
+
+	// 	if ( $db_tracking = revisr()->git->get_config( 'revisr', 'db-tracking' ) ) {
+	// 		if ( $db_tracking == 'custom' && $this->is_updated( 'tracked_tables' ) ) {
+	// 			revisr()->git->run( 'config', array( '--unset-all', 'revisr.tracked-tables' ) );
+	// 			$tables = revisr()->options['tracked_tables'];
+	// 			foreach ( $tables as $table ) {
+	// 				revisr()->git->run( 'config', array( '--add', 'revisr.tracked-tables', $table ) );
+	// 			}
+	// 		} elseif ( $db_tracking != 'custom' ) {
+	// 			revisr()->git->run( 'config', array( '--unset-all', 'revisr.tracked-tables' ) );
+	// 		}
+	// 	} else {
+	// 		$db_tracking = '';
+	// 	}
+	// 	// Allows the user to select the tables they want to track.
+	// 	$db 	= new Revisr_DB();
+	// 	$tables = $db->get_tables();
+	// 	$sizes  = $db->get_sizes();
+	// 	echo '<div id="advanced-db-tracking" style="display:none;"><br><select name="revisr_database_settings[tracked_tables][]" multiple="multiple" style="width:35em;height:250px;">';
+
+	// 	if ( is_array( $tables ) ) {
+
+	// 		foreach ( $tables as $table ) {
+
+	// 			$size = isset( $sizes[$table] ) ? $sizes[$table] : '';
+	// 			$table_selected = '';
+
+	// 			if ( in_array( $table, $db->get_tracked_tables() ) ) {
+	// 				$table_selected = ' selected';
+	// 			}
+
+	// 			echo "<option value='$table'$table_selected>$table $size</option>";
+
+	// 		}
+
+	// 	}
+
+	// 	echo '</select></div>';
+	// }
+
+	// /**
+	//  * Displays/updates the "Development URL" settings field.
+	//  * NOTE: DO NOT USE THE OPTION AS STORED IN THE DATABASE!
+	//  * @access public
+	//  */
+	// public function development_url_callback() {
+	// 	// Allow the user to unset the dev URL.
+	// 	if ( isset( $_GET['settings-updated'] ) ) {
+	// 		if ( $this->is_updated( 'development_url' ) ) {
+	// 			revisr()->git->set_config( 'revisr', 'dev-url', esc_url_raw( revisr()->options['development_url'] ) );
+	// 		} else {
+	// 			revisr()->git->run( 'config', array( '--unset', 'revisr.dev-url' ) );
+	// 		}
+	// 	}
+
+	// 	// Grab the URL from the .git/config as it will be replaced in the database.
+	// 	$get_url = revisr()->git->get_config( 'revisr', 'dev-url' );
+	// 	if ( $get_url !== false ) {
+	// 		$dev_url = $get_url;
+	// 	} else {
+	// 		$dev_url = '';
+	// 	}
+
+	// 	printf(
+	// 		'<input type="text" id="development_url" name="revisr_database_settings[development_url]" class="regular-text revisr-text" value="%s" />
+	// 		<p class="description revisr-description">%s</p>',
+	// 		$dev_url,
+	// 		__( 'If you\'re importing the database from a seperate environment, enter the WordPress Site URL for that environment here to replace all occurrences of that URL with the current Site URL during import. This MUST match the WordPress Site URL of the database being imported.', 'revisr' )
+	// 	);
+	// }
+
+	// /**
+	//  * Displays/updates the "DB Driver" settings field.
+	//  * @access public
+	//  */
+	// public function db_driver_callback() {
+	// 	if ( $this->is_updated( 'db_driver' ) ) {
+	// 		revisr()->git->set_config( 'revisr', 'db-driver', revisr()->options['db_driver'] );
+	// 	}
+
+	// 	$current = revisr()->git->get_config( 'revisr', 'db-driver' );
+
+	// }
+
+	// /**
+	//  * Displays/updates the "Path to MySQL" settings field.
+	//  * @access public
+	//  */
+	// public function mysql_path_callback() {
+	// 	if ( isset( $_GET['settings-updated'] ) ) {
+	// 		if ( $this->is_updated( 'mysql_path' ) ) {
+
+	// 			// Properly escape trailing backslashes on Windows.
+	// 			if ( substr( revisr()->options['mysql_path'], -1 ) === '\\' ) {
+	// 				revisr()->options['mysql_path'] .= '\\';
+	// 			}
+
+	// 			revisr()->git->set_config( 'revisr', 'mysql-path', revisr()->options['mysql_path'] );
+
+	// 		} else {
+	// 			revisr()->git->run( 'config', array( '--unset', 'revisr.mysql-path' ) );
+	// 		}
+	// 	}
+
+	// 	if ( $get_path = revisr()->git->get_config( 'revisr', 'mysql-path' ) ) {
+	// 		$mysql_path = $get_path;
+	// 	} else {
+	// 		$mysql_path = '';
+	// 	}
+
+	// 	printf(
+	// 		'<input type="text" id="mysql_path" name="revisr_database_settings[mysql_path]" value="%s" class="regular-text revisr-text" placeholder="" />
+	// 		<p class="description revisr-description">%s</p>',
+	// 		esc_attr( $mysql_path ),
+	// 		__( 'Leave blank if the full path to MySQL has already been set on the server. Some possible settings include:
+	// 		<br><br>For MAMP: /Applications/MAMP/Library/bin/<br>
+	// 		For WAMP: C:\wamp\bin\mysql\mysql5.6.12\bin\ ', 'revisr' )
+	// 	);
+	// }
+
+	// /**
+	//  * Displays/updates the "Reset DB" settings field.
+	//  * @access public
+	//  */
+	// public function reset_db_callback() {
+
+	// 	if ( isset( $_GET['settings-updated'] ) ) {
+
+	// 		if ( isset( revisr()->options['reset_db'] ) ) {
+	// 			revisr()->git->set_config( 'revisr', 'import-checkouts', 'true' );
+	// 		} else {
+	// 			revisr()->git->run( 'config', array( '--unset-all', 'revisr.import-checkouts' ) );
+	// 		}
+
+	// 		if ( isset( revisr()->options['import_db'] ) ) {
+	// 			revisr()->git->set_config( 'revisr', 'import-pulls', 'true' );
+	// 		} else {
+	// 			revisr()->git->run( 'config',  array( '--unset-all', 'revisr.import-pulls' ) );
+	// 		}
+	// 	}
+
+	// 	printf(
+	// 		'<input type="checkbox" id="reset_db" name="revisr_database_settings[reset_db]" %s /><label for="reset_db">%s</label><br><br>
+	// 		<input type="checkbox" id="import_db" name="revisr_database_settings[import_db]" %s /><label for="import_db">%s</label><br><br>
+	// 		<p class="description revisr-description">%s</p>',
+	// 		checked( revisr()->git->get_config( 'revisr', 'import-checkouts' ), 'true', false ),
+	// 		__( 'Import database when changing branches?', 'revisr' ),
+	// 		checked( revisr()->git->get_config( 'revisr', 'import-pulls' ), 'true', false ),
+	// 		__( 'Import database when pulling commits?', 'revisr' ),
+	// 		__( 'If checked, Revisr will automatically import the above tracked tables while pulling from or checking out a branch. The tracked tables will be backed up beforehand to provide a restore point immediately prior to the import. Use this feature with caution and only after verifying that you have a full backup of your website.', 'revisr' )
+	// 	);
+	// }
 }

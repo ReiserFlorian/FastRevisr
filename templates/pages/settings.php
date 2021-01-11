@@ -34,7 +34,7 @@ $active_tab = isset( $_GET[ 'tab' ] ) ? $_GET[ 'tab' ] : 'general_settings';
 		<h2 class="nav-tab-wrapper">
 		    <a href="?page=revisr_settings&tab=general_settings" class="nav-tab <?php echo $active_tab == 'general_settings' ? 'nav-tab-active' : ''; ?>"><?php _e( 'General', 'revisr' ); ?></a>
 		    <a href="?page=revisr_settings&tab=remote_settings" class="nav-tab <?php echo $active_tab == 'remote_settings' ? 'nav-tab-active' : ''; ?>"><?php _e( 'Remote', 'revisr' ); ?></a>
-		    <a href="?page=revisr_settings&tab=database_settings" class="nav-tab <?php echo $active_tab == 'database_settings' ? 'nav-tab-active' : ''; ?>"><?php _e( 'Database', 'revisr' ); ?></a>
+		    <a href="?page=revisr_settings&tab=database_dump_settings" class="nav-tab <?php echo $active_tab == 'database_dump_settings' ? 'nav-tab-active' : ''; ?>"><?php _e( 'Database Dump', 'revisr' ); ?></a>
 		    <a href="?page=revisr_settings&tab=help" class="nav-tab <?php echo $active_tab == 'help' ? 'nav-tab-active' : ''; ?>"><?php _e( 'Help', 'revisr' ); ?></a>
 		</h2>
 
@@ -54,9 +54,9 @@ $active_tab = isset( $_GET[ 'tab' ] ) ? $_GET[ 'tab' ] : 'general_settings';
 	            		do_settings_sections( 'revisr_remote_settings' );
 	            		break;
 
-            		case 'database_settings':
-			            settings_fields( 'revisr_database_settings' );
-	            		do_settings_sections( 'revisr_database_settings' );
+            		case 'database_dump_settings':
+			            settings_fields( 'revisr_db_dump_settings' );
+	            		do_settings_sections( 'revisr_db_dump_settings' );
 	            		break;
 
             		case 'help':

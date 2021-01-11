@@ -26,6 +26,7 @@ if ( revisr()->options['uninstall_on_delete'] ) {
 	delete_option( 'revisr_general_settings' );
 	delete_option( 'revisr_remote_settings' );
 	delete_option( 'revisr_database_settings' );
+	delete_option( 'revisr_db_dump_settings' );
 
 	// Remove any set transients.
 	delete_transient( 'revisr_error_details' );

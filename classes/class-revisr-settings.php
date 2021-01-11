@@ -57,10 +57,10 @@ class Revisr_Settings {
 			'revisr_remote_settings'
 		);
 		add_settings_section(
-			'revisr_database_settings',
-			'Database Settings',
-			array( $this->settings_fields, 'revisr_database_settings_callback' ),
-			'revisr_database_settings'
+			'revisr_db_dump_settings',
+			'Database Dump Settings',
+			array( $this->settings_fields, 'revisr_db_dump_settings_callback' ),
+			'revisr_db_dump_settings'
 		);
 	}
 
@@ -153,41 +153,58 @@ class Revisr_Settings {
 			'revisr_remote_settings',
 			'revisr_remote_settings'
 		);
+
 		add_settings_field(
-			'tracked_tables',
-			__( 'Database tables to track', 'revisr' ),
-			array( $this->settings_fields, 'tracked_tables_callback' ),
-			'revisr_database_settings',
-			'revisr_database_settings'
+			'mysql_dump_helper',
+			__( 'Mysql Dump Helper Scripts'),
+			array( $this->settings_fields, 'mysql_dump_helper_callback'),
+			'revisr_db_dump_settings',
+			'revisr_db_dump_settings'
 		);
-    	add_settings_field(
-    		'reset_db',
-    		__( 'Import Options', 'revisr' ),
-    		array( $this->settings_fields, 'reset_db_callback' ),
-    		'revisr_database_settings',
-    		'revisr_database_settings'
-		);
+
 		add_settings_field(
-			'development_url',
-			__( 'Development URL', 'revisr'),
-			array( $this->settings_fields, 'development_url_callback' ),
-			'revisr_database_settings',
-			'revisr_database_settings'
+			'mysq_dump_path',
+			__( 'Mysql Dump Path'),
+			array( $this->settings_fields, 'mysql_dump_path_callback'),
+			'revisr_db_dump_settings',
+			'revisr_db_dump_settings'
 		);
-		add_settings_field(
-			'db_driver',
-			__( 'Database Driver', 'revisr' ),
-			array( $this->settings_fields, 'db_driver_callback' ),
-			'revisr_database_settings',
-			'revisr_database_settings'
-		);
-        add_settings_field(
-        	'mysql_path',
-        	__( 'Path to MySQL', 'revisr' ),
-        	array( $this->settings_fields, 'mysql_path_callback' ),
-        	'revisr_database_settings',
-        	'revisr_database_settings'
-    	);
+
+		// add_settings_field(
+		// 	'tracked_tables',
+		// 	__( 'Database tables to track', 'revisr' ),
+		// 	array( $this->settings_fields, 'tracked_tables_callback' ),
+		// 	'revisr_database_settings',
+		// 	'revisr_database_settings'
+		// );
+    	// add_settings_field(
+    	// 	'reset_db',
+    	// 	__( 'Import Options', 'revisr' ),
+    	// 	array( $this->settings_fields, 'reset_db_callback' ),
+    	// 	'revisr_database_settings',
+    	// 	'revisr_database_settings'
+		// );
+		// add_settings_field(
+		// 	'development_url',
+		// 	__( 'Development URL', 'revisr'),
+		// 	array( $this->settings_fields, 'development_url_callback' ),
+		// 	'revisr_database_settings',
+		// 	'revisr_database_settings'
+		// );
+		// add_settings_field(
+		// 	'db_driver',
+		// 	__( 'Database Driver', 'revisr' ),
+		// 	array( $this->settings_fields, 'db_driver_callback' ),
+		// 	'revisr_database_settings',
+		// 	'revisr_database_settings'
+		// );
+        // add_settings_field(
+        // 	'mysql_path',
+        // 	__( 'Path to MySQL', 'revisr' ),
+        // 	array( $this->settings_fields, 'mysql_path_callback' ),
+        // 	'revisr_database_settings',
+        // 	'revisr_database_settings'
+    	// );
 	}
 
 	/**
@@ -205,8 +222,8 @@ class Revisr_Settings {
 			array( $this, 'sanitize_remote' )
 		);
 		register_setting(
-			'revisr_database_settings',
-			'revisr_database_settings'
+			'revisr_db_dump_settings',
+			'revisr_db_dump_settings'
 		);
 	}
 
