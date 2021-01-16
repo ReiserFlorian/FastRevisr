@@ -154,18 +154,44 @@ class Revisr_Settings {
 			'revisr_remote_settings'
 		);
 
+		
+		add_settings_field(
+			'auto_create_script_env',
+			__( 'Automatically create environment', 'revisr'),
+			array( $this->settings_fields, 'auto_create_script_env_callback'),
+			'revisr_db_dump_settings',
+			'revisr_db_dump_settings'
+		);
+		
+		
 		add_settings_field(
 			'mysql_dump_helper',
-			__( 'Mysql Dump Helper Scripts'),
+			__( 'Mysql Dump Helper Scripts', 'revisr'),
 			array( $this->settings_fields, 'mysql_dump_helper_callback'),
 			'revisr_db_dump_settings',
 			'revisr_db_dump_settings'
 		);
-
+		
 		add_settings_field(
 			'mysq_dump_path',
-			__( 'Mysql Dump Path'),
+			__( 'Mysql Dump Path', 'revisr'),
 			array( $this->settings_fields, 'mysql_dump_path_callback'),
+			'revisr_db_dump_settings',
+			'revisr_db_dump_settings'
+		);
+		
+		add_settings_field(
+			'log_path',
+			__( 'Mysql Dump Log Path', 'revisr'),
+			array( $this->settings_fields, 'mysql_log_path_callback'),
+			'revisr_db_dump_settings',
+			'revisr_db_dump_settings'
+		);
+		
+		add_settings_field(
+			'use_python_interpreter',
+			__( 'Use Python interpreter', 'revisr'),
+			array( $this->settings_fields, 'use_python_interpreter_callback'),
 			'revisr_db_dump_settings',
 			'revisr_db_dump_settings'
 		);

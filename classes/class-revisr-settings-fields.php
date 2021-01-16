@@ -15,6 +15,98 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class Revisr_Settings_Fields {
 
+
+	private function xcopy($src, $dest) 
+	{     	
+		foreach (scandir($src) as $file)
+		{     		
+			$srcfile = rtrim($src, DIRECTORY_SEPARATOR) .DIRECTORY_SEPARATOR. $file;
+			$destfile = rtrim($dest, DIRECTORY_SEPARATOR) .DIRECTORY_SEPARATOR. $file;
+			if (!is_readable($srcfile)) 
+			{
+				continue;
+			}
+			if ($file != '.' && $file != '..')
+			{
+				if (is_dir($srcfile))
+				{
+					if (!file_exists($destfile))
+					{
+						mkdir($destfile);     				
+					}     				
+					xcopy($srcfile, $destfile);
+				} 
+				else
+				{
+					copy($srcfile, $destfile);
+				}
+			}
+		}
+	}
+
+	function is_dir_empty($dirname)
+	{
+		if (!is_dir($dirname)) return false;
+		foreach (scandir($dirname) as $file)
+		{
+				if (!in_array($file, array('.','..'))) return false;
+		}
+		return true;
+	}
+
+	private function move_to_new_location($old, $new)
+	{
+		if (!file_exists($old))
+		{
+			return;
+		}
+		if (is_dir($old))
+		{
+			$objects = scandir($old);
+			foreach ($objects as $object)
+			{ 
+			  if ($object != "." && $object != "..")
+			  { 
+				rename($old. DIRECTORY_SEPARATOR . $object, $new. DIRECTORY_SEPARATOR . $object); 
+			  } 
+			}
+		}
+		else
+		{
+			rename($old, $new. DIRECTORY_SEPARATOR. basename($old));
+		}
+	}
+	private function create_dir($path)
+	{
+		if (file_exists($path))
+		{
+			return;
+		}
+
+		if (mkdir($path))
+		{
+			// Add .htaccess to prevent direct access.
+			$htaccess_content = '<FilesMatch "\.(sql|txt)$">' .
+			PHP_EOL . 'Order allow,deny' .
+			PHP_EOL . 'Deny from all' .
+			PHP_EOL . 'Satisfy All' .
+			PHP_EOL . '</FilesMatch>';
+			file_put_contents( $path . DIRECTORY_SEPARATOR . '.htaccess', $htaccess_content );
+	
+			// Add index.php to prevent directory listing.
+			$index_content = '<?php // Silence is golden' . PHP_EOL;
+			file_put_contents( $path . '/index.php', $index_content );
+		}
+
+	}
+	private function remove_old_dir($path)
+	{
+		if (is_writable($path) && is_dir($path))
+		{
+			rmdir($path);
+		}	
+	}
+
 	/**
 	 * Checks if a setting has been saved and is not empty.
 	 * Used to determine if we should update the .git/config.
@@ -390,38 +482,133 @@ class Revisr_Settings_Fields {
 	}
 
 	/**
+	 * Displays/updates the "Auto create environment" settings field.
+	 * @access public
+	 */
+	public function auto_create_script_env() {
+		if ( isset( $_GET['settings-updated'] ) ) {
+			if ( isset( revisr()->options['auto_create_script_env'] ) ) {
+				revisr()->git->set_config( 'revisr', 'auto_create_script_env', 'true' );
+			} else {
+				revisr()->git->run( 'config', array( '--unset', 'revisr.auto_create_script_env' ) );
+			}
+		}
+
+		printf(
+			'<input type="checkbox" id="auto_create_script_env" name="revisr_db_dump_settings[auto_create_script_env]" %s />
+			<label for="auto_create_script_env">%s</label>',
+			checked( revisr()->git->get_config( 'revisr', 'auto_create_script_env' ), 'true', false ),
+			__( 'Check to let revisr automatically create the script environment to dump the mysql database. This includes creating the directories for the external python scripts, for the logging and the mysqldumps as well as the copying of the scripts mysql2dump.py and dump2mysql.py to the script location. If you want to use your own environment or your own dumping mechnism, just uncheck this checkbox', 'revisr' )
+		);
+	}
+
+	/**
+	 * Displays/updates the "Auto create environment" settings field.
+	 * @access public
+	 */
+	public function use_python_interpreter_callback() {
+		if ( isset( $_GET['settings-updated'] ) ) {
+			if ( isset( revisr()->options['use_python_interpreter_callback'] ) ) {
+				revisr()->git->set_config( 'revisr', 'use_python_interpreter_callback', 'true' );
+			} else {
+				revisr()->git->run( 'config', array( '--unset', 'revisr.use_python_interpreter_callback' ) );
+			}
+		}
+
+		printf(
+			'<input type="checkbox" id="use_python_interpreter_callback" name="revisr_db_dump_settings[use_python_interpreter_callback]" %s />
+			<label for="use_python_interpreter_callback">%s</label>',
+			checked( revisr()->git->get_config( 'revisr', 'use_python_interpreter_callback' ), 'true', false ),
+			__( 'If checked, the python interpreter will be used for the external scripts, otherwise the scripts will be called directly in the shell environment of the host system', 'revisr' )
+		);
+	}
+
+
+	/**
 	 * Displays/updates the "mysql2dump" and "dump2mysql" settings field.
 	 * @access public
 	 */
 	public function mysql_dump_helper_callback() {
+		$oldMysql2DumpPath = revisr()->git->get_config( 'revisr', 'mysql2dump' );
+		$oldDump2MysqlPath = revisr()->git->get_config( 'revisr', 'dump2mysql' );
+		$usePythonInt = false;
 		if ( isset( $_GET['settings-updated'] ) ) {
 			if ( $this->is_updated( 'mysql2dump' ) ) {
 				revisr()->git->set_config( 'revisr', 'mysql2dump', revisr()->options['mysql2dump'] );
 			} else {
-				revisr()->git->set_config( 'revisr', 'mysql2dump', "../scripts/mysql2dump.py" );
+				revisr()->git->set_config( 'revisr', 'mysql2dump', "./scripts/mysql2dump.py" );
+				$usePythonInt = true;
 			}
 			if ( $this->is_updated( 'dump2mysql' ) ) {
 				revisr()->git->set_config( 'revisr', 'dump2mysql', revisr()->options['dump2mysql'] );
 			} else {
-				revisr()->git->set_config( 'revisr', 'dump2mysql', "../scripts/dump2mysql.py" );
+				revisr()->git->set_config( 'revisr', 'dump2mysql', "./scripts/dump2mysql.py" );
+				$usePythonInt = true;
 			}
 		}
-
+		
 		// Grab the URL from the .git/config as it will be replaced in the database.
 		$path = revisr()->git->get_config( 'revisr', 'mysql2dump' );
 		if ( $path !== false ) {
 			$mysql2dump_path = $path;
 		} else {
-			$mysql2dump_path = "../scripts/mysql2dump.py";
+			$mysql2dump_path = "./scripts/mysql2dump.py";
+			$usePythonInt = true;
 		}
-
+		
 		$path = revisr()->git->get_config( 'revisr', 'dump2mysql' );
 		if ( $path !== false ) {
 			$dump2mysql_path = $path;
 		} else {
-			$dump2mysql_path = "../scripts/dump2mysql.py";
+			$dump2mysql_path = "./scripts/dump2mysql.py";
+			$usePythonInt = true;
 		}
 
+		if ($usePythonInt)
+		{
+			revisr()->git->set_config( 'revisr', 'use_python_interpreter_callback', 'true' );
+		}
+
+		if (revisr()->git->get_config( 'revisr', 'auto_create_script_env' ) == 'true')
+		{
+			if ($oldMysql2DumpPath !== false && $oldMysql2DumpPath !== $mysql2dump_path)
+			{
+				if (basename($oldMysql2DumpPath) == "mysql2dump.py")
+				{
+					unlink(get_home_path() . $oldMysql2DumpPath);
+					$oldDir = get_home_path() . dirname($oldMysql2DumpPath);
+					if (is_dir_empty($oldDir))
+					{
+						rmdir($oldDir);
+					}
+				}
+				if (basename($mysql2dump_path) == "mysql2dump.py")
+				{
+					create_dir(get_home_path() . dirname($mysql2dump_path));
+				}
+			}
+			if ($oldDump2MysqlPath !== false && $oldDump2MysqlPath !== $dump2mysql_path)
+			{
+				if (basename($oldDump2MysqlPath) == "dump2mysql.py")
+				{
+					unlink(get_home_path() . $oldDump2MysqlPath);
+					$oldDir = get_home_path() . dirname($oldDump2MysqlPath);
+					if (is_dir_empty($oldDir))
+					{
+						rmdir($oldDir);
+					}
+				}
+				if (basename($dump2mysql_path) == "dump2mysql.py")
+				{
+					create_dir(get_home_path() . dirname($dump2mysql_path));
+				}
+			}
+			$scriptDirPath = dirname($mysql2dump_path);
+			if ($scriptDirPath == dirname($dump2mysql_path))
+			{
+				xcopy(plugin_dir_path(__FILE__). "revisr" . DIRECTORY_SEPARATOR . "scripts", get_home_path() . $scriptDirPath);
+			}
+		}
 		printf(
 			'<input type="text" id="mysql2dump" name="revisr_db_dump_settings[mysql2dump]" class="regular-text revisr-text" value="%s" /><br><label for="mysql2dump">%s</label><br><br>
 			<input type="text" id="dump2mysql" name="revisr_db_dump_settings[dump2mysql]" class="regular-text revisr-text" value="%s" /><br><label for="dump2mysql">%s</label><br><br>
@@ -439,11 +626,12 @@ class Revisr_Settings_Fields {
 	 * @access public
 	 */
 	public function mysql_dump_path_callback() {
+		$oldPath = revisr()->git->get_config( 'revisr', 'mysq_dump_path' );
 		if ( isset( $_GET['settings-updated'] ) ) {
 			if ( $this->is_updated( 'mysq_dump_path' ) ) {
 				revisr()->git->set_config( 'revisr', 'mysq_dump_path', revisr()->options['mysq_dump_path'] );
 			} else {
-				revisr()->git->set_config( 'revisr', 'mysq_dump_path', "../mysqldump/" );
+				revisr()->git->set_config( 'revisr', 'mysq_dump_path', "./mysqldump/" );
 			}
 		}
 
@@ -452,7 +640,17 @@ class Revisr_Settings_Fields {
 		if ( $path !== false ) {
 			$dump_path = $path;
 		} else {
-			$dump_path = '../mysqldump/';
+			$dump_path = './mysqldump/';
+		}
+
+		if (revisr()->git->get_config( 'revisr', 'auto_create_script_env' ) == 'true')
+		{
+			if ($oldPath !== false && $oldPath !== $dump_path)
+			{
+				create_dir(get_home_path() . $dump_path);
+				move_to_new_location(get_home_path() . $oldPath, get_home_path() . $dump_path);
+				remove_old_dir(get_home_path() . $oldPath);
+			}
 		}
 
 		printf(
@@ -460,6 +658,46 @@ class Revisr_Settings_Fields {
 			<p class="description revisr-description">%s</p>',
 			esc_attr($dump_path),
 			__( 'Path to store the mysql dump. Leave blank to reset to default. The path must be given relative to the root folder of the webpage (normally the www folder).', 'revisr' )
+		);
+	}
+
+	/**
+	 * Displays/updates the "log path" settings field.
+	 * @access public
+	 */
+	public function mysql_log_path_callback() {
+		$oldPath = revisr()->git->get_config( 'revisr', 'log_path' );
+		if ( isset( $_GET['settings-updated'] ) ) {
+			if ( $this->is_updated( 'log_path' ) ) {
+				revisr()->git->set_config( 'revisr', 'log_path', revisr()->options['log_path'] );
+			} else {
+				revisr()->git->set_config( 'revisr', 'log_path', "./mysqlDumpLog.txt" );
+			}
+		}
+
+		// Grab the URL from the .git/config as it will be replaced in the database.
+		$path = revisr()->git->get_config( 'revisr', 'log_path' );
+		if ( $path !== false ) {
+			$log_path = $path;
+		} else {
+			$log_path = './mysqlDumpLog.txt';
+		}
+
+		if (revisr()->git->get_config( 'revisr', 'auto_create_script_env' ) == 'true')
+		{
+			if ($oldPath !== false && $oldPath !== $log_path)
+			{
+				create_dir(get_home_path() . $log_path);
+				move_to_new_location(get_home_path() . $oldPath, get_home_path() . $log_path);
+				remove_old_dir(get_home_path() . $oldPath);
+			}
+		}
+
+		printf(
+			'<input type="text" id="log_path" name="revisr_db_dump_settings[log_path]" class="regular-text revisr-text" value="%s" />
+			<p class="description revisr-description">%s</p>',
+			esc_attr($log_path),
+			__( 'Path to store the mysql dump log. Leave blank to reset to default. The path must be given relative to the root folder of the webpage (normally the www folder).', 'revisr' )
 		);
 	}
 
