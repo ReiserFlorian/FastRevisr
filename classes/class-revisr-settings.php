@@ -157,7 +157,7 @@ class Revisr_Settings {
 		
 		add_settings_field(
 			'auto_create_script_env',
-			__( 'Automatically create environment', 'revisr'),
+			__( 'Automatically create environment?', 'revisr'),
 			array( $this->settings_fields, 'auto_create_script_env_callback'),
 			'revisr_db_dump_settings',
 			'revisr_db_dump_settings'
@@ -184,14 +184,6 @@ class Revisr_Settings {
 			'log_path',
 			__( 'Mysql Dump Log Path', 'revisr'),
 			array( $this->settings_fields, 'mysql_log_path_callback'),
-			'revisr_db_dump_settings',
-			'revisr_db_dump_settings'
-		);
-		
-		add_settings_field(
-			'use_python_interpreter',
-			__( 'Use Python interpreter', 'revisr'),
-			array( $this->settings_fields, 'use_python_interpreter_callback'),
 			'revisr_db_dump_settings',
 			'revisr_db_dump_settings'
 		);
