@@ -33,6 +33,25 @@ class Revisr_Git_Callback {
 		return false;
 	}
 
+	/** Callback for a successful clone */
+	public function success_clone ( $output = array(), $args = '' ) {
+		$msg 		= sprintf(__('Clone successful: %s', 'revisr'), implode(', ', $output));
+		add_settings_error('revisr_db_dump_settings', 'settings-updated', $msg, 'success');
+		Revisr_Admin::alert( $msg );
+		Revisr_Admin::log( $msg, 'clone' );
+	}
+
+	/**
+	 * Callback for a failed clone.
+	 * @access public
+	 */
+	public function null_clone( $output = array(), $args = '' ) {
+		$msg = sprintf(__( 'There was an error during cloning: %s', 'revisr' ), implode(', ', $output));
+		add_settings_error('revisr_db_dump_settings', 'settings-updated', $msg, 'error');
+		Revisr_Admin::alert( $msg, true );
+		Revisr_Admin::log( $msg, 'error' );
+	}
+
 	/**
 	 * Callback for a successful checkout.
 	 * @access public
@@ -43,7 +62,6 @@ class Revisr_Git_Callback {
 		$email_msg 	= sprintf( __( '%s was switched to branch %s.', 'revisr' ), get_bloginfo(), $branch );
 		Revisr_Admin::alert( $msg );
 		Revisr_Admin::log( $msg, 'branch' );
-		Revisr_Admin::notify(get_bloginfo() . __( ' - Branch Changed', 'revisr'), $email_msg );
 	}
 
 	/**

@@ -99,19 +99,46 @@ class Revisr_Git {
 	 */
 	public function run( $command, $args, $callback = '', $info = '' ) {
 
+		return $this->git_run($command, $args, $this->work_tree, $callback, $info, $this->git_dir);
+	}
+
+	/**
+	 * Runs a Git command and fires the given callback.
+	 * @access 	public
+	 * @param   string          $work_tree_path Use the git repository in this path. 
+	 *                            Can be an empty string, in this case no work tree path
+	 *                            will be used.
+	 * @param 	string 			$command 	The command to use.
+	 * @param 	array 			$args 		Arguements provided by user.
+	 * @param 	string 			$callback 	The callback to use.
+	 * @param 	string|array 	$info 		Additional info to pass to the callback
+	 */
+	public function git_run( $command, $args, $work_tree_path = '', $callback = '', $info = '', $git_dir = '') {
 		// Setup the command for safe usage.
 		$safe_path 		= Revisr_Admin::escapeshellarg( $this->git_path );
 		$safe_cmd 		= Revisr_Admin::escapeshellarg( $command );
 		$safe_args 		= join( ' ', array_map( array( 'Revisr_Admin', 'escapeshellarg' ), $args ) );
 
-		// Allow for customizing the git work-tree and git-dir paths.
-		$git_dir 	= Revisr_Admin::escapeshellarg( "--git-dir=$this->git_dir" );
-		$work_tree 	= Revisr_Admin::escapeshellarg( "--work-tree=$this->work_tree" );
 
-		// Run the command.
-		chdir( $this->work_tree );
-		exec( "$safe_path $git_dir $work_tree $safe_cmd $safe_args 2>&1", $output, $return_code );
-		chdir( $this->current_dir );
+		if ($work_tree_path !== '')
+		{
+			if ($git_dir == '')
+			{
+				$git_dir = $work_tree_path . DIRECTORY_SEPARATOR . '.git';
+			}
+			$git_dir 	= Revisr_Admin::escapeshellarg( "--git-dir=$git_dir" );
+			$work_tree 	= Revisr_Admin::escapeshellarg( "--work-tree=$work_tree_path" );
+	
+			// Run the command.
+			chdir( $work_tree_path );
+			exec( "$safe_path $git_dir $work_tree $safe_cmd $safe_args 2>&1", $output, $return_code );
+			chdir( $this->current_dir );
+		}
+		else
+		{
+			exec( "$safe_path $safe_cmd $safe_args 2>&1", $output, $return_code );
+		}
+		
 
 		// Process the response.
 		$response 			= new Revisr_Git_Callback();

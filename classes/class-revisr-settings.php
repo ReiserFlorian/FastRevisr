@@ -22,11 +22,19 @@ class Revisr_Settings {
 	protected $settings_fields;
 
 	/**
+	 * External Mysql Dump Script git URL lookup
+	 */
+	protected $external_script_git_lookup;
+
+	/**
 	 * Initialize the class.
 	 * @access public
 	 */
 	public function __construct() {
 		$this->settings_fields = new Revisr_Settings_Fields();
+		$this->external_script_git_lookup = array(
+			'PyMysqlDump' => 'https://github.com/ReiserFlorian/PyMysqlDump.git'
+		);
 	}
 
 	/**
@@ -241,7 +249,8 @@ class Revisr_Settings {
 		);
 		register_setting(
 			'revisr_db_dump_settings',
-			'revisr_db_dump_settings'
+			'revisr_db_dump_settings',
+			array( 'sanitize_callback' => array( $this, 'sanitize_db_dump'))
 		);
 	}
 
@@ -256,6 +265,60 @@ class Revisr_Settings {
 			$input['webhook_url'] = urlencode( $input['webhook_url'] );
 		}
 		return $input;
+	}
+
+	public function sanitize_db_dump ( $input )
+	{
+		if ( isset($input['external_script_source']) && isset($input['script_path']) )
+		{
+			$script_path = $input['script_path'];
+			$external_script_source = $input['external_script_source'];
+			if ($external_script_source !== 'local')
+			{
+				if (file_exists(get_home_path() . $script_path) )
+				{
+					if (file_exists(get_home_path() . $script_path . DIRECTORY_SEPARATOR . ".git"))
+					{
+						$result = revisr()->git->git_run('remote', array( 'get-url', 'origin' ), get_home_path() . $script_path )[0];
+						rtrim($result);
+						if ($result !== $this->external_script_git_lookup[$external_script_source])
+						{
+							$msg = sprintf(__( 'The directory %s already belongs to the repository %s', 'revisr' ), 
+								get_home_path() . $script_path,
+								$result
+							);
+							add_settings_error('revisr_db_dump_settings', 'settings-updated', $msg, 'error');	
+						}
+					}
+					else
+					{
+						$msg = sprintf(__( 'The directory %s already exists', 'revisr' ), get_home_path() . $script_path);
+						add_settings_error('revisr_db_dump_settings', 'settings-updated', $msg, 'error');
+					}
+				}
+				else
+				{
+					revisr()->git->git_run( 
+						'clone', 
+						array($this->external_script_git_lookup[$external_script_source], get_home_path() . $script_path),
+						'',
+						'clone'
+					);
+
+					// Add .htaccess to prevent direct access.
+					$htaccess_content = '<FilesMatch "\.(py|cnf)$">' .
+					PHP_EOL . 'Order allow,deny' .
+					PHP_EOL . 'Deny from all' .
+					PHP_EOL . 'Satisfy All' .
+					PHP_EOL . '</FilesMatch>';
+					file_put_contents( get_home_path() . $script_path . DIRECTORY_SEPARATOR . '.htaccess', $htaccess_content );
+			
+					// Add index.php to prevent directory listing.
+					$index_content = '<?php // Silence is golden' . PHP_EOL;
+					file_put_contents( get_home_path() . $script_path . '/index.php', $index_content );
+				}
+			}
+		}	
 	}
 
 }

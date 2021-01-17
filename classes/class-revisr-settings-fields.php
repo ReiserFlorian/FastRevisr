@@ -90,7 +90,7 @@ class Revisr_Settings_Fields {
 		if (mkdir($path, $mode, true))
 		{
 			// Add .htaccess to prevent direct access.
-			$htaccess_content = '<FilesMatch "\.(sql|txt)$">' .
+			$htaccess_content = '<FilesMatch "\.(sql|txt|py|bat|cmd|sh)$">' .
 			PHP_EOL . 'Order allow,deny' .
 			PHP_EOL . 'Deny from all' .
 			PHP_EOL . 'Satisfy All' .
@@ -577,54 +577,6 @@ class Revisr_Settings_Fields {
 			$dump2mysql_path = "";
 		}
 
-		
-		if ($update && revisr()->git->get_config( 'revisr', 'auto-create-script-env' ) == 'true')
-		{
-			$this->create_dir(get_home_path() . $script_path);
-		}
-		// if ($update && revisr()->git->get_config( 'revisr', 'auto-create-script-env' ) == 'true')
-		// {
-		// 	if ($oldMysql2DumpPath !== false && $oldMysql2DumpPath !== $mysql2dump_path && file_exists($oldMysql2DumpPath))
-		// 	{
-		// 		if (basename($oldMysql2DumpPath) == "mysql2dump.py")
-		// 		{
-		// 			unlink(get_home_path() . $oldMysql2DumpPath);
-		// 			$oldDir = get_home_path() . dirname($oldMysql2DumpPath);
-		// 			if ($this->is_dir_empty($oldDir))
-		// 			{
-		// 				rmdir($oldDir);
-		// 			}
-		// 		}
-		// 	}
-		// 	if ($oldDump2MysqlPath !== false && $oldDump2MysqlPath !== $dump2mysql_path && file_exists($oldDump2MysqlPath))
-		// 	{
-		// 		if (basename($oldDump2MysqlPath) == "dump2mysql.py")
-		// 		{
-		// 			unlink(get_home_path() . $oldDump2MysqlPath);
-		// 			$oldDir = get_home_path() . dirname($oldDump2MysqlPath);
-		// 			if ($this->is_dir_empty($oldDir))
-		// 			{
-		// 				rmdir($oldDir);
-		// 			}
-		// 		}
-		// 	}
-		// 	$scriptDirPath = dirname($mysql2dump_path);
-		// 	if ($scriptDirPath == dirname($dump2mysql_path) && 
-		// 		(
-		// 			basename($mysql2dump_path) == "mysql2dump.py" ||
-		// 			basename($dump2mysql_path) == "dump2mysql.py"
-		// 		)
-		// 	)
-		// 	{
-
-		// 		revisr()->git->set_config( 'revisr', 'use-python-interpreter', 'true' );
-		// 		$this->create_dir(get_home_path() . $scriptDirPath);
-		// 		$this->xcopy(
-		// 			rtrim(plugin_dir_path(__FILE__), "/\\") . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "scripts", 
-		// 			get_home_path() . $scriptDirPath
-		// 		);
-		// 	}
-		// }
 		?>
 		<script>
 			function scriptPathEnabler(value) {
