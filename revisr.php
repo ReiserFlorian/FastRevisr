@@ -164,9 +164,77 @@ final class Revisr {
 			self::$instance->load_admin_hooks();
 		}
 
+		add_action('admin_notices', array(__CLASS__, 'external_dump_scripts_out_of_date_msg'));
+
 		// Fires after the plugin has loaded.
 		do_action( 'revisr_loaded' );
 
+	}
+
+	/**
+	 * Check, if external mysql dump scripts are up to date
+	 * Returns true, if external script is up to date, otherwise false
+	 */
+	public static function check_external_dump_scripts() {
+	
+		$option = self::$instance->git->get_config( 'revisr', 'external-script-source' );
+		if ( $option !== false ) {
+			$externalScript = $option;
+		}
+		else {
+			$externalScript = 'local';
+		}
+
+		if ($externalScript !== 'local')
+		{
+			$path =self::$instance->git->get_config( 'revisr', 'script-path' );
+			if ( $path !== false ) {
+				$script_path = $path;
+			} else {
+				$script_path = './scripts';
+			}
+			$script_path_abs = get_home_path() . $script_path;
+			if (file_exists($script_path_abs))
+			{
+				self::$instance->git->git_run(
+					'remote',
+					array('update'),
+					$script_path_abs
+				);
+				$branchName = self::$instance->git->git_run(
+					'branch',
+					array('--show-current'),
+					$script_path_abs
+				)[0];
+				if ($branchName !== '')
+				{
+					$localCommit = self::$instance->git->git_run(
+						'rev-parse',
+						array($branchName),
+						$script_path_abs
+					)[0];
+					$remoteCommit = self::$instance->git->git_run(
+						'rev-parse',
+						array('origin/'.$branchName),
+						$script_path_abs
+					)[0];
+					return $localCommit == $remoteCommit;
+				}
+			}
+		}
+		return true;
+	}
+
+	public static function external_dump_scripts_out_of_date_msg()
+	{
+		if (!self::$instance->check_external_dump_scripts())
+		{
+			?>
+			<div class="notice notice-success is-dismissible">
+				<p><?php _e( 'There is a new version of the external dump script used by the revisr plugin.', 'revisr' ); ?></p>
+			</div>
+			<?php
+		}
 	}
 
 	/**
