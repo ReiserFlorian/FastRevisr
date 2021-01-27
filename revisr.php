@@ -225,13 +225,44 @@ final class Revisr {
 		return true;
 	}
 
+	public static function update_external_dump_scripts() {
+		$option = self::$instance->git->get_config( 'revisr', 'external-script-source' );
+		if ( $option !== false ) {
+			$externalScript = $option;
+		}
+		else {
+			$externalScript = 'local';
+		}
+
+		if ($externalScript !== 'local')
+		{
+			$path =self::$instance->git->get_config( 'revisr', 'script-path' );
+			if ( $path !== false ) {
+				$script_path = $path;
+			} else {
+				$script_path = './scripts';
+			}
+			$script_path_abs = get_home_path() . $script_path;
+			if (file_exists($script_path_abs))
+			{
+				self::$instance->git->git_run(
+					'pull',
+					array(),
+					$script_path_abs,
+					'external_script_update'
+				);
+			}
+		}
+	}
+
 	public static function external_dump_scripts_out_of_date_msg()
 	{
 		if (!self::$instance->check_external_dump_scripts())
 		{
 			?>
-			<div class="notice notice-success is-dismissible">
-				<p><?php _e( 'There is a new version of the external dump script used by the revisr plugin.', 'revisr' ); ?></p>
+			<div id="external-script-update-notice" class="notice notice-info is-dismissible">
+				<p><?php _e( 'There is a new version of the external dump script used by the revisr plugin ', 'revisr' ); ?>
+				<button id="revisr-update-external-dump-script" class="button"><?php _e( 'Update', 'revisr' ); ?></button></p>
 			</div>
 			<?php
 		}
@@ -396,7 +427,10 @@ final class Revisr {
 		// Load the settings page.
 		$settings = new Revisr_Settings();
 		add_action( 'admin_init', array( $settings, 'init_settings' ) );
-	}
+
+		// Update external dump script
+		add_action( 'wp_ajax_update-external-dump-script', array(__CLASS__, 'update_external_dump_scripts'));
+	} 
 
 	/**
 	 * Returns the name of the capability required to use Revisr.

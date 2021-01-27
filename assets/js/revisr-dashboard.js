@@ -150,6 +150,19 @@ jQuery('#revisr-backup-btn').click(function() {
 	});
 });
 
+/**
+ * Runs when the 'Update' button is clicked, which should pull the lates external dump script.
+ */
+jQuery('#revisr-update-external-dump-script').click(function() {
+	jQuery('.revisr-alert').hide();
+	jQuery('#revisr-processing-request').show();
+	jQuery.post(ajaxurl, {action: 'update-external-dump-script', source: 'ajax_button', revisr_dashboard_nonce: revisr_dashboard_vars.ajax_nonce}, function(response) {
+		jQuery('#external-script-update-notice').hide();
+		update_alert();
+		revisr_list.update();
+		delayed_refresh();
+	});
+});
 
 var revisr_list = {
 	/**

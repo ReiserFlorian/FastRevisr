@@ -384,4 +384,32 @@ class Revisr_Git_Callback {
 	public function null_version( $output = array(), $args = '' ) {
 		return __( 'Unknown', 'revisr' );
 	}
+
+	
+	/**
+	 * Callback for successful external_script_update.
+	 * @access public
+	 */
+	public function success_external_script_update( $output = array(), $args = '' ) {
+		$msg = __( 'Successfully updated the external dump script', 'revisr' );
+		Revisr_Admin::alert( $msg );
+		Revisr_Admin::log( $msg, 'external_script_update' );
+	}
+
+	/**
+	 * Callback for a failed external_script_update.
+	 * @access public
+	 */
+	public function null_external_script_update( $output = array(), $args = '' ) {
+		$option = revisr()->git->get_config( 'revisr', 'external-script-source' );
+		if ( $option !== false ) {
+			$externalScript = $option;
+		}
+		else {
+			$externalScript = 'undefined';
+		}
+		$msg = sprintf(__( 'Unable to update the external script %s', 'revisr' ), $externalScript);
+		Revisr_Admin::alert( $msg, true, $output );
+		Revisr_Admin::log( $msg, 'error' );
+	}
 }
