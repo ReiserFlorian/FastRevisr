@@ -14,5 +14,3 @@ require $_tests_dir . '/includes/bootstrap.php';
 
 //define( 'REVISR_GIT_DIR', '/tmp/wordpress' );
 
-// Activate & install the plugin
-Revisr::install();
