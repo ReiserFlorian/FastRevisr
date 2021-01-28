@@ -236,7 +236,6 @@ class Revisr_Commits_Table extends WP_List_Table {
 	 * @access public
 	 */
 	public function prepare_items() {
-		global $wpdb;
 
 		// Number of items per page.
 		$per_page = $this->get_items_per_page( 'edit_revisr_commits_per_page', 10 );

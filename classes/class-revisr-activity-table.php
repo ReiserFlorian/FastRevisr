@@ -62,62 +62,6 @@ class Revisr_Activity_Table extends WP_List_Table {
 		set_screen_options();
 	}
 
-	/**
-	 * Loads additional filters into the table.
-	 * @access public
-	 * @return string
-	 */
-	public function extra_tablenav( $which ) {
-		if ( 'top' === $which ) {
-
-			$filter_event 	= isset( $_REQUEST['revisr_event'] ) ? $_REQUEST['revisr_event'] : 'all';
-			$filter_user 	= isset( $_REQUEST['revisr_user'] ) ? $_REQUEST['revisr_user'] : 'all';
-			$filter_time 	= isset( $_REQUEST['revisr_time'] ) ? $_REQUEST['revisr_time'] : 'all';
-
-			?>
-
-				<select id="revisr-events-select" name="revisr_event">
-					<option value="all"><?php _e( 'All Events', 'revisr' ); ?></option>
-					<option value="branch" <?php selected( 'branch', $filter_event ); ?>><?php _e( 'Branches', 'revisr' ); ?></option>
-					<option value="commit" <?php selected( 'commit', $filter_event ); ?>><?php _e( 'Commits', 'revisr' ); ?></option>
-					<option value="backup" <?php selected( 'backup', $filter_event ); ?>><?php _e( 'Database Backups', 'revisr' ); ?></option>
-					<option value="imports" <?php selected( 'import', $filter_event ); ?>><?php _e( 'Database Imports', 'revisr' ); ?></option>
-					<option value="discard" <?php selected( 'discard', $filter_event ); ?>><?php _e( 'File Discards', 'revisr' ); ?></option>
-					<option value="push" <?php selected( 'push', $filter_event ); ?>><?php _e( 'Pushes', 'revisr' ); ?></option>
-					<option value="pull" <?php selected( 'pull', $filter_event ); ?>><?php _e( 'Pulls', 'revisr' ); ?></option>
-				</select>
-
-				<select id="revisr-author-select" name="revisr_user">
-					<option value="all"><?php _e( 'All Users', 'revisr' ); ?></option>
-					<?php
-						global $wpdb;
-						$table = Revisr::get_table_name();
-						$users = $wpdb->get_results( "SELECT DISTINCT user FROM $table ORDER BY user ASC", ARRAY_A );
-						foreach ( $users as $user ) {
-							if ( $user['user'] != null ) {
-								printf( '<option value="%s" %s>%s</option>', esc_attr( $user['user'] ), selected( $user['user'], $filter_user, false ), esc_attr( $user['user'] ) );
-							}
-						}
-					?>
-				</select>
-
-				<select id="revisr-time-select" name="revisr_time">
-					<option value="all"><?php _e( 'All Time', 'revisr' ); ?></option>
-					<option value="halfday" <?php selected( 'halfday', $filter_time ); ?>><?php _e( 'Last 12 Hours', 'revisr' ); ?></option>
-					<option value="day" <?php selected( 'day', $filter_time ); ?>><?php _e( 'Last 24 Hours', 'revisr' ); ?></option>
-					<option value="week" <?php selected( 'week', $filter_time ); ?>><?php _e( 'Last Week', 'revisr' ); ?></option>
-					<option value="month" <?php selected( 'month', $filter_time ); ?>><?php _e( 'Last Month', 'revisr' ); ?></option>
-				</select>
-
-				<input type="submit" id="revisr-filter-submit" class="button" value="<?php _e( 'Filter', 'revisr' ); ?>" />
-			<?php
-
-			if ( $filter_event != 'all' || $filter_time != 'all' || $filter_user != 'all' ) {
-				echo sprintf( '<a href="%s" id="reset"><span class="dashicons dashicons-dismiss" style="font-size:13px; text-decoration: none; margin-top: 7px;"></span><span class="record-query-reset-text">%s</span></a>', get_admin_url() . 'admin.php?page=revisr', __( 'Reset', 'revisr' ) );
-			}
-
-		}
-	}
 
 	/**
 	 * Sets the screen options for the Revisr dashboard.
@@ -205,51 +149,51 @@ class Revisr_Activity_Table extends WP_List_Table {
 	 */
 	public function create_where() {
 
-        $where = array();
+        // $where = array();
 
-        foreach ( $this->get_filters() as $filter => $col ) {
+        // foreach ( $this->get_filters() as $filter => $col ) {
 
-			if ( isset( $_REQUEST[$filter] ) && $_REQUEST[$filter] != 'all' ) {
+		// 	if ( isset( $_REQUEST[$filter] ) && $_REQUEST[$filter] != 'all' ) {
 
-	        	if ( 'revisr_time' === $filter ) {
+	    //     	if ( 'revisr_time' === $filter ) {
 
-	        		$value 	= $_REQUEST[$filter];
-	        		$time 	= '';
+	    //     		$value 	= $_REQUEST[$filter];
+	    //     		$time 	= '';
 
-	        		switch( $value ) {
-	        			case 'halfday':
-	        				$time = DAY_IN_SECONDS / 2;
-	        				break;
-	        			case 'day':
-	        				$time = DAY_IN_SECONDS;
-	        				break;
-	    				case 'week':
-	    					$time = DAY_IN_SECONDS * 7;
-	    					break;
-						case 'month':
-							$time = DAY_IN_SECONDS * 28;
-							break;
+	    //     		switch( $value ) {
+	    //     			case 'halfday':
+	    //     				$time = DAY_IN_SECONDS / 2;
+	    //     				break;
+	    //     			case 'day':
+	    //     				$time = DAY_IN_SECONDS;
+	    //     				break;
+	    // 				case 'week':
+	    // 					$time = DAY_IN_SECONDS * 7;
+	    // 					break;
+		// 				case 'month':
+		// 					$time = DAY_IN_SECONDS * 28;
+		// 					break;
 
-	        		}
+	    //     		}
 
-	        		if ( $time !== '' ) {
-	        			$time 		= esc_sql( date( 'Y-m-d H:i:s', time() - $time ) );
-	        			$where[] 	= "$col > '$time'";
-	        		}
+	    //     		if ( $time !== '' ) {
+	    //     			$time 		= esc_sql( date( 'Y-m-d H:i:s', time() - $time ) );
+	    //     			$where[] 	= "$col > '$time'";
+	    //     		}
 
-	        	} else {
-	        		$value 		= esc_sql( $_REQUEST[$filter] );
-        			$where[] 	= "$col = '$value'";
-	        	}
+	    //     	} else {
+	    //     		$value 		= esc_sql( $_REQUEST[$filter] );
+        // 			$where[] 	= "$col = '$value'";
+	    //     	}
 
-        	}
-        }
+        // 	}
+        // }
 
-        // Build out the WHERE queries.
-        $where = empty( $where ) ? '' : 'WHERE ' . implode( ' AND ', $where );
+        // // Build out the WHERE queries.
+        // $where = empty( $where ) ? '' : 'WHERE ' . implode( ' AND ', $where );
 
-        // Return the WHERE queries.
-        return $where;
+        // // Return the WHERE queries.
+        // return $where;
 	}
 
 	/**
@@ -257,53 +201,53 @@ class Revisr_Activity_Table extends WP_List_Table {
 	 * @access public
 	 */
 	public function prepare_items() {
-		global $wpdb;
-		$table = Revisr::get_table_name();
+		// global $wpdb;
+		// $table = Revisr::get_table_name();
 
-		// Number of items per page.
-		$per_page = $this->get_items_per_page( 'edit_revisr_events_per_page', 15 );
+		// // Number of items per page.
+		// $per_page = $this->get_items_per_page( 'edit_revisr_events_per_page', 15 );
 
-		// Set up the custom columns.
-        $columns 	= $this->get_columns();
-        $hidden 	= array();
-        $sortable 	= $this->get_sortable_columns();
+		// // Set up the custom columns.
+        // $columns 	= $this->get_columns();
+        // $hidden 	= array();
+        // $sortable 	= $this->get_sortable_columns();
 
-        // Builds the list of column headers.
-        $this->_column_headers = array( $columns, $hidden, $sortable );
+        // // Builds the list of column headers.
+        // $this->_column_headers = array( $columns, $hidden, $sortable );
 
-        // Run any custom filters.
-        $where = $this->create_where();
+        // // Run any custom filters.
+        // $where = $this->create_where();
 
-        // Get the data to populate into the table.
-        $data = $wpdb->get_results( "SELECT message, time, user FROM $table $where", ARRAY_A );
+        // // Get the data to populate into the table.
+        // $data = $wpdb->get_results( "SELECT message, time, user FROM $table $where", ARRAY_A );
 
-        // Handle sorting of the data.
-        function usort_reorder($a,$b){
-        	// Default to time for default sort.
-        	$orderby 	= isset( $_REQUEST['orderby'] ) ? $_REQUEST['orderby'] : 'time';
+        // // Handle sorting of the data.
+        // function usort_reorder($a,$b){
+        // 	// Default to time for default sort.
+        // 	$orderby 	= isset( $_REQUEST['orderby'] ) ? $_REQUEST['orderby'] : 'time';
 
-        	// Default to descending for default sort order.
-        	$order 		= isset( $_REQUEST['order'] ) ? $_REQUEST['order'] : 'desc';
+        // 	// Default to descending for default sort order.
+        // 	$order 		= isset( $_REQUEST['order'] ) ? $_REQUEST['order'] : 'desc';
 
-        	// Determine the sort order and send to usort.
-        	$result 	= strcmp( $a[$orderby], $b[$orderby] );
-        	return ( $order === 'asc' ) ? $result : -$result;
-        }
-        usort( $data, 'usort_reorder' );
+        // 	// Determine the sort order and send to usort.
+        // 	$result 	= strcmp( $a[$orderby], $b[$orderby] );
+        // 	return ( $order === 'asc' ) ? $result : -$result;
+        // }
+        // usort( $data, 'usort_reorder' );
 
-        // Pagination.
-        $current_page 	= $this->get_pagenum();
-        $total_items 	= count($data);
-       	$data 			= array_slice($data,(($current_page-1)*$per_page),$per_page);
+        // // Pagination.
+        // $current_page 	= $this->get_pagenum();
+        // $total_items 	= count($data);
+       	// $data 			= array_slice($data,(($current_page-1)*$per_page),$per_page);
 
-        $this->items = $data;
-        $this->set_pagination_args( array(
-            'total_items' 	=> $total_items,
-            'per_page'    	=> $per_page,
-            'total_pages' 	=> ceil($total_items/$per_page),
-            'orderby'		=> isset( $_REQUEST['orderby'] ) ? $_REQUEST['orderby'] : 'time',
-            'order'			=> isset( $_REQUEST['order'] ) ? $_REQUEST['order'] : 'desc'
-        ) );
+        // $this->items = $data;
+        // $this->set_pagination_args( array(
+        //     'total_items' 	=> $total_items,
+        //     'per_page'    	=> $per_page,
+        //     'total_pages' 	=> ceil($total_items/$per_page),
+        //     'orderby'		=> isset( $_REQUEST['orderby'] ) ? $_REQUEST['orderby'] : 'time',
+        //     'order'			=> isset( $_REQUEST['order'] ) ? $_REQUEST['order'] : 'desc'
+        // ) );
 	}
 
 	/**
@@ -321,8 +265,8 @@ class Revisr_Activity_Table extends WP_List_Table {
 		echo '<input type="hidden" name="revisr_user" value="' . $filter_user . '" />';
 		echo '<input type="hidden" name="revisr_time" value="' . $filter_time . '" />';
 
-		echo '<input type="hidden" id="order" name="order" value="' . $this->_pagination_args['order'] . '" />';
-		echo '<input type="hidden" id="orderby" name="orderby" value="' . $this->_pagination_args['orderby'] . '" />';
+		// echo '<input type="hidden" id="order" name="order" value="' . $this->_pagination_args['order'] . '" />';
+		// echo '<input type="hidden" id="orderby" name="orderby" value="' . $this->_pagination_args['orderby'] . '" />';
 
 		parent::display();
 	}
@@ -341,7 +285,7 @@ class Revisr_Activity_Table extends WP_List_Table {
 	        </div>
 
 	        <?php
-	        	$this->extra_tablenav( $which );
+	        	//$this->extra_tablenav( $which );
 	        	$this->pagination( $which );
 	        ?>
 

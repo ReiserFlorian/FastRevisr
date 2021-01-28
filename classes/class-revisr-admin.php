@@ -110,37 +110,37 @@ class Revisr_Admin {
 	 */
 	public static function log( $message, $event, $user = '' ) {
 
-		global $wpdb;
+		// global $wpdb;
 
-		$time  	= current_time( 'mysql' );
-		$table 	= Revisr::get_table_name();
+		// $time  	= current_time( 'mysql' );
+		// $table 	= Revisr::get_table_name();
 
-		if ( '' === $user ) {
-			$user = wp_get_current_user();
-			$username = $user->user_login;
-		} else {
-			$username = $user;
-		}
+		// if ( '' === $user ) {
+		// 	$user = wp_get_current_user();
+		// 	$username = $user->user_login;
+		// } else {
+		// 	$username = $user;
+		// }
 
-		if ( ! $username || '' === $username ) {
-			$username = __( 'Revisr Bot', 'revisr' );
-		}
+		// if ( ! $username || '' === $username ) {
+		// 	$username = __( 'Revisr Bot', 'revisr' );
+		// }
 
-		$wpdb->insert(
-			"$table",
-			array(
-				'time' 		=> $time,
-				'message'	=> $message,
-				'event' 	=> $event,
-				'user' 		=> $username,
-			),
-			array(
-				'%s',
-				'%s',
-				'%s',
-				'%s',
-			)
-		);
+		// $wpdb->insert(
+		// 	"$table",
+		// 	array(
+		// 		'time' 		=> $time,
+		// 		'message'	=> $message,
+		// 		'event' 	=> $event,
+		// 		'user' 		=> $username,
+		// 	),
+		// 	array(
+		// 		'%s',
+		// 		'%s',
+		// 		'%s',
+		// 		'%s',
+		// 	)
+		// );
 	}
 
 	/**
@@ -195,75 +195,6 @@ class Revisr_Admin {
 		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
 			exit();
 		}
-
-	}
-
-	/**
-	 * Updates user settings to be compatible with 1.8.
-	 * @access public
-	 */
-	public function do_upgrade() {
-		global $wpdb;
-
-		// For users upgrading from 1.7 and older.
-		if ( get_option( 'revisr_db_version' ) === '1.0' ) {
-
-			// Check for the "auto_push" option and save it to the config.
-			if ( isset( revisr()->options['auto_push'] ) ) {
-				revisr()->git->set_config( 'revisr', 'auto-push', 'true' );
-			}
-
-			// Check for the "auto_pull" option and save it to the config.
-			if ( isset( revisr()->options['auto_pull'] ) ) {
-				revisr()->git->set_config( 'revisr', 'auto-pull', 'true' );
-			}
-
-			// Check for the "reset_db" option and save it to the config.
-			if ( isset( revisr()->options['reset_db'] ) ) {
-				revisr()->git->set_config( 'revisr', 'import-checkouts', 'true' );
-			}
-
-			// Check for the "mysql_path" option and save it to the config.
-			if ( isset( revisr()->options['mysql_path'] ) ) {
-				revisr()->git->set_config( 'revisr', 'mysql-path', revisr()->options['mysql_path'] );
-			}
-
-			// Configure the database tracking to use all tables, as this was how it behaved in 1.7.
-			revisr()->git->set_config( 'revisr', 'db_tracking', 'all_tables' );
-		}
-
-		// Upgrades from the "revisr_commits" custom post type to pure Git.
-		$table 		= Revisr::get_table_name();
-		$commits 	= $wpdb->get_results( "SELECT * FROM $table WHERE event = 'commit'", ARRAY_A );
-
-		if ( is_array( $commits ) && ! empty( $commits ) ) {
-
-			foreach ( $commits as $commit ) {
-				// Get the commit short hash from the message.
-				$msg_array 	= explode( '#', $commit['message'] );
-				$commit_id 	= substr( $msg_array[1], 0, 7 );
-
-				// Prepare the new message.
-				$new_msg 	= sprintf(
-					__( 'Committed <a href="%s">#%s</a> to the local repository.', 'revisr' ),
-					get_admin_url() . 'admin.php?page=revisr_view_commit&commit=' . $commit_id,
-					$commit_id
-				);
-
-				// Update the existing message.
-				$query = $wpdb->prepare(
-					"UPDATE $table SET message = %s WHERE id = '%d'",
-					$new_msg,
-					$commit['id']
-				);
-
-				$wpdb->query( $query );
-			}
-
-		}
-
-		// Update the database schema using dbDelta.
-		Revisr::install();
 
 	}
 

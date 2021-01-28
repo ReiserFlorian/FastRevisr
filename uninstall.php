@@ -34,16 +34,16 @@ if ( revisr()->options['uninstall_on_delete'] ) {
 	delete_transient( 'revisr_alert' );
 	delete_transient( 'revisr_skip_setup' );
 
-	// Delete any commits.
-	$commits = get_posts( array( 'post_type' => 'revisr_commits', 'post_status' => 'any', 'number_posts' => -1, 'fields' => 'ids' ) );
-	foreach ( $commits as $commit ) {
-		wp_delete_post( $commit, true );
-	}
+	// // Delete any commits.
+	// $commits = get_posts( array( 'post_type' => 'revisr_commits', 'post_status' => 'any', 'number_posts' => -1, 'fields' => 'ids' ) );
+	// foreach ( $commits as $commit ) {
+	// 	wp_delete_post( $commit, true );
+	// }
 
-	// Drop the Revisr database table.
-	global $wpdb;
-	$table_name = $wpdb->prefix . 'revisr';
-	$sql 		= "DROP TABLE $table_name";
-	$wpdb->query( $sql );
+	// // Drop the Revisr database table.
+	// global $wpdb;
+	// $table_name = $wpdb->prefix . 'revisr';
+	// $sql 		= "DROP TABLE $table_name";
+	// $wpdb->query( $sql );
 
 }

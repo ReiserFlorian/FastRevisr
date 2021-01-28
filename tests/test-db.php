@@ -53,26 +53,6 @@ class RevisrDBTest extends WP_UnitTestCase {
 		$this->assertFileExists( ABSPATH . 'wp-content/uploads/revisr-backups/index.php' );
 	}
 
-	/**
-	 * Tests the get_tables() method.
-	 */
-	function test_get_tables() {
-		$tables = serialize( $this->revisr->db->get_tables() );
-		$this->assertContains( '_posts', $tables );
-		$this->assertContains( '_revisr', $tables );
-
-	}
-
-	/**
-	 * Tests the get_sizes() method.
-	 */
-	function test_get_sizes() {
-		global $wpdb;
-		$sizes 	= $this->revisr->db->get_sizes();
-		$key 	= $wpdb->prefix . 'posts';
-		$this->assertArrayHasKey($key, $sizes );
-		$this->assertContains( 'MB)', $sizes[$key] );
-	}
 
 	/**
 	 * Tests the get_tables_not_in_db() method.

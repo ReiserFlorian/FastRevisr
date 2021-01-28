@@ -398,11 +398,6 @@ final class Revisr {
 		add_action( 'wp_ajax_ajax_button_count', array( $admin, 'ajax_button_count' ) );
 		add_action( 'wp_ajax_verify_remote', array( self::$instance->git, 'verify_remote' ) );
 
-		// Update the database schema if necessary.
-		if ( get_option( 'revisr_db_version' ) !== '2.0' ) {
-			add_action( 'admin_init', array( $admin, 'do_upgrade' ) );
-		}
-
 		// Processes actions taken from within the WordPress dashboard.
 		$process = new Revisr_Process();
 		add_action( 'init', array( $process, 'is_repo' ) );
@@ -460,31 +455,10 @@ final class Revisr {
 	 * @access public
 	 * @return string
 	 */
-	public static function get_table_name() {
-		global $wpdb;
-		return esc_sql( $wpdb->prefix . 'revisr' );
-	}
-
-	/**
-	 * Installs the database table.
-	 * @access public
-	 */
-	public static function install() {
-		$table_name = Revisr::get_table_name();
-		$sql = "CREATE TABLE {$table_name} (
-			id mediumint(9) NOT NULL AUTO_INCREMENT,
-			time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-			message TEXT,
-			event VARCHAR(42) NOT NULL,
-			user VARCHAR(60),
-			UNIQUE KEY id (id)
-			);";
-
-	  	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-	   	dbDelta( $sql );
-
-		update_option( 'revisr_db_version', '2.0' );
-	}
+	// public static function get_table_name() {
+	// 	global $wpdb;
+	// 	return esc_sql( $wpdb->prefix . 'revisr' );
+	// }
 
 }
 
@@ -500,6 +474,3 @@ function revisr() {
 
 // Let's go!
 revisr();
-
-// Register the activation hook.
-register_activation_hook( __FILE__, array( 'Revisr', 'install' ) );

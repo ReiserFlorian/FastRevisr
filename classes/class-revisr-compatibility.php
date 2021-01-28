@@ -22,8 +22,6 @@ class Revisr_Compatibility {
 	 */
 	public static function get_sysinfo() {
 
-		global $wpdb;
-
 		$return = '### Begin System Info ###' . "\n\n";
 
 		// Basic site info
@@ -33,7 +31,6 @@ class Revisr_Compatibility {
 		$return .= 'Multisite:                ' . ( is_multisite() ? 'Yes' : 'No' ) . "\n";
 		$return .= 'Version:                  ' . get_bloginfo( 'version' ) . "\n";
 		$return .= 'Language:                 ' . ( defined( 'WPLANG' ) && WPLANG ? WPLANG : 'en_US' ) . "\n";
-		$return .= 'Table Prefix:             ' . 'Length: ' . strlen( $wpdb->prefix ) . "\n";
 		$return .= 'WP_DEBUG:                 ' . ( defined( 'WP_DEBUG' ) ? WP_DEBUG ? 'Enabled' : 'Disabled' : 'Not set' ) . "\n";
 		$return .= 'Memory Limit:             ' . WP_MEMORY_LIMIT . "\n";
 
@@ -94,7 +91,6 @@ class Revisr_Compatibility {
 		$os = Revisr_Compatibility::get_os();
 		$return .= 'Operating System:         ' . $os['name'] . "\n";
 		$return .= 'PHP Version:              ' . PHP_VERSION . "\n";
-		$return .= 'MySQL Version:            ' . $wpdb->db_version() . "\n";
 		$return .= 'Git Version:              ' . revisr()->git->version() . "\n";
 
 		$return .= 'Git Install Path:         ' . Revisr_Compatibility::guess_path( 'git' ) . "\n";

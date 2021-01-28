@@ -64,14 +64,6 @@ class RevisrTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Tests get_table_name().
-	 */
-	function test_get_table_name() {
-		$revisr_table_name = Revisr::get_table_name();
-		$this->assertContains( 'revisr', $revisr_table_name );
-	}
-
-	/**
 	 * Tests the get_options() method.
 	 */
 	function test_get_options() {
@@ -84,14 +76,4 @@ class RevisrTest extends WP_UnitTestCase {
 		$this->assertTrue( $result );
 	}
 
-	/**
-	 * Tests the database installation.
-	 */
-	function test_install() {
-		Revisr::install();
-		global $wpdb;
-		$table_name 	= $wpdb->prefix . 'revisr';
-		$table_check 	= $wpdb->get_var( "SHOW TABLES LIKE '$table_name'" );
-		$this->assertEquals( $table_name, $table_check );
-	}
 }
