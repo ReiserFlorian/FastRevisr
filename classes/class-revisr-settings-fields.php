@@ -399,6 +399,38 @@ class Revisr_Settings_Fields {
 	}
 
 	/**
+	 * Displays/updates the "Merge Conflict Branch Name" settings field.
+	 * @access public
+	 */
+	public function merge_conflict_branch_name_callback() {
+
+		// Allow the user to unset the Webhook URL.
+		if ( isset( $_GET['settings-updated'] ) ) {
+			if ( $this->is_updated( 'merge_conflict_branch_name' ) ) {
+				revisr()->git->set_config( 'revisr', 'merge-conflict-branch-name', revisr()->options['merge_conflict_branch_name'] );
+			} else {
+				revisr()->git->run( 'config', array( '--unset', 'revisr.merge-conflict-branch-name' ) );
+			}
+		}
+
+		// Grab the URL from the .git/config as it MAY be replaced in the database.
+		$get_name = revisr()->git->get_config( 'revisr', 'merge-conflict-branch-name' );
+
+		if ( $get_name ) {
+			$merge_conflict_branch_name = $get_name;
+		} else {
+			$merge_conflict_branch_name = '';
+		}
+
+		printf(
+			'<input type="text" id="merge_conflict_branch_name" name="revisr_remote_settings[merge_conflict_branch_name]" value="%s" class="regular-text revisr-text" />
+			<p class="description revisr-description">%s</p>',
+			$merge_conflict_branch_name,
+			__( 'In case you have a merge conflict, revisr will push to this branch. This allows you to resolve the merge conflict on your local machine, which is much easier than doing it remotely. The branch must exists on the remote.', 'revisr' )
+		);
+	}
+
+	/**
 	 * Displays/updates the "Revisr Webhook URL" settings field.
 	 * @access public
 	 */
@@ -519,6 +551,8 @@ class Revisr_Settings_Fields {
 		$update = false;
 
 		$externalScript = 'PyMysqlDump';
+		$mysql2dump_cmd_default = "python mysql2dump.py --wordpress";
+		$dump2mysql_cmd_default = "python dump2mysql.py --wordpress";
 		if (isset( revisr()->options['external_script_source'] ))
 		{
 			$externalScript = revisr()->options['external_script_source'];
@@ -533,8 +567,8 @@ class Revisr_Settings_Fields {
 			if ( $externalScript !== 'local') 
 			{
 				revisr()->git->set_config( 'revisr', 'external-script-source', $externalScript );
-				revisr()->git->run( 'config', array( '--unset', 'revisr.mysql2dump' ) );
-				revisr()->git->run( 'config', array( '--unset', 'revisr.dump2mysql' ) );
+				revisr()->git->set_config( 'revisr', 'mysql2dump', $mysql2dump_cmd_default );
+				revisr()->git->set_config( 'revisr', 'dump2mysql', $dump2mysql_cmd_default );
 			} else {
 				revisr()->git->run( 'config', array( '--unset', 'revisr.external-script-source' ) );
 				if ( $this->is_updated( 'mysql2dump' ) ) {
@@ -565,16 +599,24 @@ class Revisr_Settings_Fields {
 		}
 		$path = revisr()->git->get_config( 'revisr', 'mysql2dump' );
 		if ( $path !== false ) {
-			$mysql2dump_path = $path;
+			$mysql2dump_cmd = $path;
 		} else {
-			$mysql2dump_path = "";
+			if ( $externalScript !== 'local') {
+				$mysql2dump_cmd = $mysql2dump_cmd_default;
+			} else {
+				$mysql2dump_cmd = "";
+			}
 		}
 		
 		$path = revisr()->git->get_config( 'revisr', 'dump2mysql' );
 		if ( $path !== false ) {
-			$dump2mysql_path = $path;
+			$dump2mysql_cmd = $path;
 		} else {
-			$dump2mysql_path = "";
+			if ( $externalScript !== 'local') {
+				$dump2mysql_cmd = $dump2mysql_cmd_default;
+			} else {
+				$dump2mysql_cmd = "";
+			}
 		}
 
 		?>
@@ -588,7 +630,9 @@ class Revisr_Settings_Fields {
 				else
 				{
 					document.getElementById("mysql2dump").disabled = true;
+					document.getElementById("mysql2dump").value = "python mysql2dump.py --wordpress";
 					document.getElementById("dump2mysql").disabled = true;
+					document.getElementById("dump2mysql").value = "python dump2mysql.py --wordpress";
 				}
 			}
 		</script>
@@ -605,11 +649,11 @@ class Revisr_Settings_Fields {
 			<p class="description revisr-description">%s</p>',
 			$script_path,
 			__( 'Path, where scripts are located (must be given ralatively to the root folder of the webpage; normally the www folder). Leave blank to reset to default.', 'revisr'),
-			$mysql2dump_path,
+			$mysql2dump_cmd,
 			__( 'Path to the external script, which creates dump files from the mysql database', 'revisr' ),
-			$dump2mysql_path,
+			$dump2mysql_cmd,
 			__( 'Path to the external script, which loads the dump files into the mysql database', 'revisr' ),
-			__( 'Choose either the default git repository "PyMysqlDump" to load external python tools of choose your own scripts to make the mysql dump. The PyMysqlDump scripts need a valid python environment and some packages to be installed (see documentation <a href="https://github.com/ReiserFlorian/PyMysqlDump">https://github.com/ReiserFlorian/PyMysqlDump</a>)', 'revisr' )
+			__( 'Choose either the default git repository "PyMysqlDump" to load external python tools or choose your own scripts to make the mysql dump. The PyMysqlDump scripts need a valid python environment and some packages to be installed (see documentation <a href="https://github.com/ReiserFlorian/PyMysqlDump">https://github.com/ReiserFlorian/PyMysqlDump</a>)', 'revisr' )
 		);
 		if ($externalScript == 'local')
 		{

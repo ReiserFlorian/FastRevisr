@@ -132,11 +132,18 @@ class Revisr_Settings {
             array( $this->settings_fields, 'remote_name_callback' ),
             'revisr_remote_settings',
             'revisr_remote_settings'
-        );
+		);
         add_settings_field(
             'remote_url',
             __( 'Remote URL', 'revisr'),
             array( $this->settings_fields, 'remote_url_callback' ),
+            'revisr_remote_settings',
+            'revisr_remote_settings'
+		);
+		add_settings_field(
+            'merge_conflict_branch_name',
+            __( 'Merge Conflict Branch Name', 'revisr'),
+            array( $this->settings_fields, 'merge_conflict_branch_name_callback' ),
             'revisr_remote_settings',
             'revisr_remote_settings'
         );
