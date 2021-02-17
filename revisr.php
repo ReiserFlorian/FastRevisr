@@ -371,7 +371,6 @@ final class Revisr {
 		add_filter( 'custom_menu_order', array( $admin_pages, 'submenu_order' ) );
 		add_filter( 'parent_file', array( $admin_pages, 'parent_file' ) );
 		add_action( 'admin_bar_menu', array( $admin_pages, 'admin_bar' ), 999 );
-		add_action( 'admin_notices', array( $admin_pages, 'site5_notice' ) );
 		add_filter( 'plugin_action_links_'  . plugin_basename( __FILE__ ), array( $admin_pages, 'settings_link' ) );
 
 		// Load the thickbox forms used by Revisr.

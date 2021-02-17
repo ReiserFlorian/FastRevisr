@@ -251,38 +251,6 @@ class Revisr_Admin_Pages {
 	}
 
 	/**
-	 * Displays the "Sponsored by Site5" logo.
-	 * @access public
-	 */
-	public function site5_notice() {
-
-		$allowed_pages = array(
-			'revisr',
-			'revisr_branches',
-			'revisr_commits',
-			'revisr_settings',
-			'revisr_new_commit',
-			'revisr_view_commit'
-		);
-
-		if ( isset( $_GET['page'] ) && in_array( $_GET['page'], $allowed_pages ) ) {
-			$output = true;
-		} else {
-			$output = false;
-		}
-
-		if ( $output === true ) {
-			?>
-			<div id="site5_wrapper">
-				<?php _e( 'Sponsored by', 'revisr' ); ?>
-				<a href="http://www.site5.com/" target="_blank"><img id="site5_logo" src="<?php echo REVISR_URL . 'assets/img/site5.png'; ?>" width="80" /></a>
-			</div>
-			<?php
-		}
-
-	}
-
-	/**
 	 * Displays the link to the settings on the WordPress plugin page.
 	 * @access public
 	 * @param array $links The links assigned to Revisr.
